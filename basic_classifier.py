@@ -4,6 +4,7 @@ import h5py
 import scipy
 from scipy import ndimage
 from lr_utils import load_dataset
+from keras.preprocessing import image
 
 # Loading the data (cat/non-cat)
 train_set_x_orig, train_set_y, test_set_x_orig, test_set_y, classes = load_dataset()
@@ -214,11 +215,12 @@ frame = legend.get_frame()
 frame.set_facecolor('0.90')
 plt.show()
 
-my_image = "my_image.jpg"   # change this to the name of your image file 
+my_image = "1.jfif"   # change this to the name of your image file 
 
 # We preprocess the image to fit your algorithm.
-fname = "images/" + my_image
-image = np.array(ndimage.imread(fname, flatten=False))
+fname = "datasets/images/" + my_image
+img_low_res = image.load_img(fname, target_size=(64, 64))
+img = np.array(img_low_res)
 my_image = scipy.misc.imresize(image, size=(num_px,num_px)).reshape((1, num_px*num_px*3)).T
 my_predicted_image = predict(d["w"], d["b"], my_image)
 
