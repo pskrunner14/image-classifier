@@ -6,6 +6,8 @@ from keras.applications.imagenet_utils import preprocess_input
 import numpy as np
 import h5py
 
+resolution = 256
+
 def process_image_dataset():
     X_new = []
 
@@ -13,12 +15,9 @@ def process_image_dataset():
 
     for i in range(1, num_images + 1):
         img_path = 'datasets/images/{}.jpg'.format(i)
-        img = image.load_img(img_path, target_size=(64, 64))
-
+        img = image.load_img(img_path, target_size=(resolution, resolution))
         x = image.img_to_array(img)
-
         x = np.expand_dims(x, axis=0)
-
         x = preprocess_input(x)
         X_new.append(x[0])
 
@@ -57,7 +56,11 @@ def load_dataset():
     test_dataset = h5py.File('datasets/testing_data.h5', "r")
     x_test = np.array(test_dataset["x_test"]) # your test set features
     y_test = np.array(test_dataset["y_test"]) # your test set labels
-    
-    return x_train, y_train, x_test, y_test, labels
 
-load_dataset()
+    x_val = x_test[-20:]
+    y_val = y_test[-20:]
+
+    x_test = x_test[:-20]
+    y_test = y_test[:-20]
+
+    return x_train, y_train, x_test, y_test, x_val, y_val, labels
