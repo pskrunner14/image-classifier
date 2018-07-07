@@ -1,4 +1,4 @@
-# Overview ![Under Development](./images/under-development-orange.svg)
+# Overview ![Under Development](./datasets/under-development-orange.svg)
 
 Image classification is the task of assigning an input image one label from a fixed set of categories. This is an **Image Classifier** that can used to classify images that contain cats. Image Classification is one of the core problems in *Computer Vision* that, despite its simplicity, has a large variety of practical applications.
 
