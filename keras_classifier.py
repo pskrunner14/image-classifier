@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from keras import layers
 from keras.layers import Input, Dense, Activation, ZeroPadding2D, BatchNormalization, Flatten, Conv2D
@@ -17,15 +18,7 @@ K.set_image_data_format('channels_last')
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import imshow
 
-X_train_orig, Y_train_orig, X_test_orig, Y_test_orig, classes = load_dataset()
-
-# Normalize image vectors
-X_train = X_train_orig/255.
-X_test = X_test_orig/255.
-
-# Reshape
-Y_train = Y_train_orig.T
-Y_test = Y_test_orig.T
+X_train, Y_train, X_test, Y_test, classes = load_dataset()
 
 print ("number of training examples = " + str(X_train.shape[0]))
 print ("number of test examples = " + str(X_test.shape[0]))
@@ -61,7 +54,7 @@ def BuildModel(input_shape):
 
 model = BuildModel(X_train.shape[1:])
 model.compile(optimizer = "adam", loss = "binary_crossentropy", metrics = ["accuracy"])
-model.fit(x = X_train, y = Y_train, epochs = 20, batch_size = 50, verbose = 1)
+model.fit(x = X_train, y = Y_train, epochs = 40, batch_size = 16, verbose = 1)
 
 preds = model.evaluate(x = X_test, y = Y_test, verbose  = 1)
 
@@ -69,15 +62,26 @@ print()
 print ("Loss = " + str(preds[0]))
 print ("Test Accuracy = " + str(preds[1]))
 
-img_path = 'datasets/images/1.jfif'
-img = image.load_img(img_path, target_size=(64, 64))
-imshow(img)
+for i in range(1, 15):
 
-x = image.img_to_array(img)
-x = np.expand_dims(x, axis=0)
-x = preprocess_input(x)
+    print("Image #{}".format(i))
+    print()
 
-print(model.predict(x))
+    img_path = 'datasets/images/{}.jfif'.format(i)
+    img = image.load_img(img_path, target_size=(64, 64))
+
+    x = image.img_to_array(img)
+    x = np.expand_dims(x, axis=0)
+    x = preprocess_input(x)
+
+    if i < 12:
+        print("This picture contains a cat")
+    else:
+        print("This picture does'nt contain a cat")
+
+    prediction = model.predict(x)[0][0]
+    print("y = " + str(prediction) + ", algorithm predicts a \"" + classes[int(prediction)].decode("utf-8") +  "\" picture.")
+    print()
 
 model.summary()
 

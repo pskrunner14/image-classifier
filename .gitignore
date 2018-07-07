@@ -99,3 +99,9 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# image dataset
+images/
+
+datasets/testing_data.h5
+datasets/training_data.h5

@@ -5,6 +5,7 @@ import scipy
 from scipy import ndimage
 from lr_utils import load_dataset
 from keras.preprocessing import image
+from keras.applications.imagenet_utils import preprocess_input
 
 # Loading the data (cat/non-cat)
 train_set_x_orig, train_set_y, test_set_x_orig, test_set_y, classes = load_dataset()
@@ -220,9 +221,11 @@ my_image = "1.jfif"   # change this to the name of your image file
 # We preprocess the image to fit your algorithm.
 fname = "datasets/images/" + my_image
 img_low_res = image.load_img(fname, target_size=(64, 64))
-img = np.array(img_low_res)
-my_image = scipy.misc.imresize(image, size=(num_px,num_px)).reshape((1, num_px*num_px*3)).T
+
+x = image.img_to_array(img_low_res)
+x = np.expand_dims(x, axis=0)
+x = preprocess_input(x)
+my_image = scipy.misc.imresize(x[0], size=(num_px,num_px)).reshape((1, num_px*num_px*3)).T
 my_predicted_image = predict(d["w"], d["b"], my_image)
 
-plt.imshow(image)
 print("y = " + str(np.squeeze(my_predicted_image)) + ", algorithm predicts a \"" + classes[int(np.squeeze(my_predicted_image)),].decode("utf-8") +  "\" picture.")
