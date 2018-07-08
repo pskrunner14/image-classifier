@@ -6,6 +6,11 @@ I have developed *three* different versions of **Image Classifiers** for the sam
 <!-- ## Basic Version --> 
 <!-- ## Keras Version -->
 <!-- ## Tensorflow Version -->
+
+## Dataset
+
+The [Cat Dataset](https://www.kaggle.com/crawford/cat-dataset) from [Kaggle](https://www.kaggle.com/) includes over 9,000 cat images. For each image, there are annotations of the head of cat with nine points, two for eyes, one for mouth, and six for ears. We only need the images for this task.
+
 ## Built With
 
 * Python
