@@ -15,6 +15,7 @@ from lr_utils import load_dataset
 
 import keras.backend as K
 K.set_image_data_format('channels_last')
+
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import imshow
 
@@ -27,7 +28,7 @@ print ("Y_train shape: " + str(Y_train.shape))
 print ("X_test shape: " + str(X_test.shape))
 print ("Y_test shape: " + str(Y_test.shape))
 
-def BuildModel(input_shape):
+def create_model(input_shape):
 
     # Define the input placeholder as a tensor with shape input_shape. Think of this as your input image!
     X_input = Input(input_shape)
@@ -52,31 +53,32 @@ def BuildModel(input_shape):
 
     return model
 
-model = BuildModel(X_train.shape[1:])
+# Build model
+model = create_model(X_train.shape[1:])
 model.compile(optimizer = "adam", loss = "binary_crossentropy", metrics = ["accuracy"])
+model.summary()
+
+# Train model
 model.fit(x = X_train, y = Y_train, epochs = 10, batch_size = 50, verbose = 1)
+
+# Save model
+model.save('models/keras_model.hd5')
 
 preds = model.evaluate(x = X_test, y = Y_test, verbose  = 1)
 
-print()
-print ("Loss = " + str(preds[0]))
-print ("Test Accuracy = " + str(preds[1]))
+print ("Test Loss: {}".format(preds[0]))
+print ("Test Accuracy: {}".format(preds[1]))
 
 for i in range(len(X_val)):
-
     print("Image #{}".format(i))
-    print()
-
     if Y_val[i] == 1:
         print("This picture contains a cat")
     else:
         print("This picture does'nt contain a cat")
 
     prediction = model.predict(X_val[i])[0][0]
-    print("y = " + str(prediction) + ", algorithm predicts a \"" + classes[int(prediction)].decode("utf-8") +  "\" picture.")
+    print('y = {}, algorithm predicts a \"{}\" picture.'.format(prediction, classes[int(prediction)].decode('utf-8')))
     print()
     index += 1
 
-model.summary()
-
-plot_model(model, to_file='datasets/cat_datector.png')
+plot_model(model, to_file='models/keras_model.png')
