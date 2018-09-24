@@ -6,47 +6,6 @@ from keras.applications.imagenet_utils import preprocess_input
 import numpy as np
 import h5py
 
-resolution = 256
-
-def process_image_dataset():
-    X_new = []
-
-    num_images = len(os.listdir('datasets/images'))
-
-    for i in range(1, num_images + 1):
-        img_path = 'datasets/images/{}.jpg'.format(i)
-        img = image.load_img(img_path, target_size=(resolution, resolution))
-        x = image.img_to_array(img)
-        x = np.expand_dims(x, axis=0)
-        x = preprocess_input(x)
-        X_new.append(x[0])
-
-    X_new = np.array(X_new)
-    Y_new = np.ones((num_images, 1))
-    
-    print(X_new.shape)
-    print(Y_new.shape)
-
-    #divide into sets
-    x_train = X_new[:8000]
-    x_test = X_new[8000:]
-    y_train = Y_new[:8000]
-    y_test = Y_new[8000:]
-
-    #write final
-    labels = np.array([b'non-cat', b'cat'])
-
-    train_file = h5py.File('datasets/training_data.h5', "w")
-    train_file.create_dataset('x_train', data=x_train)
-    train_file.create_dataset('y_train', data=y_train)
-    train_file.create_dataset('labels', data=labels)
-
-    test_file = h5py.File('datasets/testing_data.h5', "w")
-    test_file.create_dataset('x_test', data=x_test)
-    test_file.create_dataset('y_test', data=y_test)
-    test_file.create_dataset('labels', data=labels)
-
-
 def load_dataset():
     train_dataset = h5py.File('datasets/training_data.h5', "r")
     x_train = np.array(train_dataset["x_train"]) # your train set features
@@ -57,10 +16,21 @@ def load_dataset():
     x_test = np.array(test_dataset["x_test"]) # your test set features
     y_test = np.array(test_dataset["y_test"]) # your test set labels
 
-    x_val = x_test[-20:]
-    y_val = y_test[-20:]
+    x_val = x_train[-1000: ]
+    y_val = y_train[-1000: ]
 
-    x_test = x_test[:-20]
-    y_test = y_test[:-20]
+    x_train = x_train[: -1000]
+    y_train = y_train[: -1000]
 
     return x_train, y_train, x_test, y_test, x_val, y_val, labels
+
+def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
+    assert len(inputs) == len(targets)
+    if shuffle:
+        indices = np.random.permutation(len(inputs))
+    for start_idx in range(0, len(inputs) - batchsize + 1, batchsize):
+        if shuffle:
+            excerpt = indices[start_idx:start_idx + batchsize]
+        else:
+            excerpt = slice(start_idx, start_idx + batchsize)
+        yield inputs[excerpt], targets[excerpt]

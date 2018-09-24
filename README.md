@@ -1,28 +1,30 @@
-# Overview ![Under Development](./datasets/under-development-orange.svg)
+# Image Classifier
 
-Image classification is the task of assigning an input image one label from a fixed set of categories. This is an **Image Classifier** that can be used to classify images that contain cats. Image Classification is one of the core problems in *Computer Vision* that, despite its simplicity, has a large variety of practical applications.
+Image classification is the task of assigning an input image one label from a fixed set of categories. This is an **Image Classifier** that can be used to classify images based on whether they contain a certain object or not. Image Classification is one of the core problems in *Computer Vision* that, despite its simplicity, has a large variety of practical applications.
 
-I have developed *three* different versions of **Image Classifiers** for the same task in order to gain a deeper understanding of the problem and the backend working of the frameworks and how their performance compares when analysed.
-<!-- ## Basic Version --> 
-<!-- ## Keras Version -->
-<!-- ## Tensorflow Version -->
+I have implemented *3* different versions of **Image Classifiers** using common Deep Learning Libraries (namely TensorFlow, Keras & Numpy) for the same task in order to gain a deeper understanding of the problem and the backend working of the frameworks and how their performance compares when analysed.
 
 ## Dataset
 
-The [Cat Dataset](https://www.kaggle.com/crawford/cat-dataset) from [Kaggle](https://www.kaggle.com/) includes over 9,000 cat images. For each image, there are annotations of the head of cat with nine points, two for eyes, one for mouth, and six for ears. We only need the images for this task.
+For the purpose of this project, I'll be using the [Cat Image Dataset](https://www.kaggle.com/crawford/cat-dataset) from [Kaggle](https://www.kaggle.com/) that includes over 9,000 images of cats which is sufficient for a binary classification task. Download the images into `datasets/images/` dir and create a dir `models/` for saving and checkpointing models during training.
+
+### Getting Started
+
+You'll need to preprocess the images using:
+```
+python preprocess.py
+```
+
+Now you can run any train script version you want:
+```
+python <lib>_clf.py
+```
 
 ## Built With
 
 * Python
+* TensorFlow
 * Keras
 * NumPy
 * h5py
-* TensorFlow
-
-## Authors
-
-Prabhsimran Singh
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE.md file for details
+* tqdm

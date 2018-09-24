@@ -1,16 +1,7 @@
 import os
 import numpy as np
-from keras import layers
-from keras.layers import Input, Dense, Activation, ZeroPadding2D, BatchNormalization, Flatten, Conv2D
-from keras.layers import AveragePooling2D, MaxPooling2D, Dropout, GlobalMaxPooling2D, GlobalAveragePooling2D
-from keras.models import Model
-from keras.preprocessing import image
-from keras.utils import layer_utils
-from keras.utils.data_utils import get_file
-from keras.applications.imagenet_utils import preprocess_input
-import pydot
-from keras.utils.vis_utils import model_to_dot
-from keras.utils import plot_model
+import keras
+
 from lr_utils import load_dataset
 
 import keras.backend as K
@@ -29,28 +20,26 @@ print ("X_test shape: " + str(X_test.shape))
 print ("Y_test shape: " + str(Y_test.shape))
 
 def create_model(input_shape):
-
-    # Define the input placeholder as a tensor with shape input_shape. Think of this as your input image!
-    X_input = Input(input_shape)
-
+    X_input = keras.layers.Input(input_shape)
+    
     # Zero-Padding: pads the border of X_input with zeroes
-    X = ZeroPadding2D((3, 3))(X_input)
-
+    X = keras.layers.ZeroPadding2D((3, 3))(X_input)
+    
     # CONV -> BN -> RELU Block applied to X
-    X = Conv2D(32, (7, 7), strides = (1, 1), name = 'conv0')(X)
-    X = BatchNormalization(axis = 3, name = 'bn0')(X)
-    X = Activation('relu')(X)
-
+    X = keras.layers.Conv2D(32, (7, 7), strides = (1, 1), name = 'conv0')(X)
+    X = keras.layers.BatchNormalization(axis = 3, name = 'bn0')(X)
+    X = keras.layers.Activation('relu')(X)
+    X = keras.layers.Dropout(0.5)(X)
+    
     # MAXPOOL
-    X = MaxPooling2D((2, 2), name='max_pool')(X)
-
+    X = keras.layers.MaxPooling2D((2, 2), name='max_pool')(X)
+    
     # FLATTEN X (means convert it to a vector) + FULLYCONNECTED
-    X = Flatten()(X)
-    X = Dense(1, activation='sigmoid', name='fc')(X)
+    X = keras.layers.Flatten()(X)
+    X = keras.layers.Dense(1, activation='sigmoid', name='fc')(X)
 
     # Create model. This creates your Keras model instance, you'll use this instance to train/test the model.
-    model = Model(inputs = X_input, outputs = X, name='Cat Detector')
-
+    model = keras.models.Model(inputs = X_input, outputs = X)
     return model
 
 # Build model
@@ -59,26 +48,23 @@ model.compile(optimizer = "adam", loss = "binary_crossentropy", metrics = ["accu
 model.summary()
 
 # Train model
-model.fit(x = X_train, y = Y_train, epochs = 10, batch_size = 50, verbose = 1)
+model.fit(x=X_train, y=Y_train, validation_data=(X_val, Y_val), 
+            shuffle=True, epochs=25, batch_size=32, verbose=1)
 
 # Save model
 model.save('models/keras_model.hd5')
-
-preds = model.evaluate(x = X_test, y = Y_test, verbose  = 1)
+preds = model.evaluate(x=X_test, y=Y_test, verbose=1)
 
 print ("Test Loss: {}".format(preds[0]))
 print ("Test Accuracy: {}".format(preds[1]))
 
-for i in range(len(X_val)):
-    print("Image #{}".format(i))
-    if Y_val[i] == 1:
+keras.utils.plot_model(model, to_file='models/keras_model.png')
+
+def make_prediction(input_image, true_labal):
+    if true_labal == 1:
         print("This picture contains a cat")
     else:
         print("This picture does'nt contain a cat")
 
-    prediction = model.predict(X_val[i])[0][0]
-    print('y = {}, algorithm predicts a \"{}\" picture.'.format(prediction, classes[int(prediction)].decode('utf-8')))
-    print()
-    index += 1
-
-plot_model(model, to_file='models/keras_model.png')
+    preds = model.predict(input_image)[0][0]
+    print('y = {}, algorithm predicts a \"{}\" picture.'.format(preds, classes[int(preds)].decode('utf-8')))
