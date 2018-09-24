@@ -1,5 +1,6 @@
 import os
 
+import click
 import numpy as np
 import tensorflow as tf
 
@@ -7,102 +8,163 @@ from tqdm import tqdm
 
 from lr_utils import load_dataset, iterate_minibatches
 
-X_train, Y_train, X_test, Y_test, X_val, Y_val, classes = load_dataset()
-# X_train, Y_train = np.random.random(size=(1000, 256, 256, 3)).astype(np.float32), np.random.randint(2, size=(1000, 1)).astype(np.float32)
-# X_test, Y_test = np.random.random(size=(200, 256, 256, 3)).astype(np.float32), np.random.randint(2, size=(200, 1)).astype(np.float32)
-# X_val, Y_val = np.random.random(size=(100, 256, 256, 3)).astype(np.float32), np.random.randint(2, size=(100, 1)).astype(np.float32)
+"""
+Training model [optional args]
+"""
+@click.command()
+@click.option('-n', '--num-epochs', default=15, help='Number of epochs for training',)
+@click.option('-bs', '--batch-size', default=32, help='Batch size for training on minibatches',)
+@click.option('-lr', '--learning-rate', default=0.001, help='Learning rate to use when training model',)
+@click.option('-tb', '--tensorboard-vis', is_flag=True, help='Flag for TensorBoard visualization',)
+def train(num_epochs, batch_size, learning_rate, tensorboard_vis):
 
-print ("number of training examples = " + str(X_train.shape[0]))
-print ("number of test examples = " + str(X_test.shape[0]))
-print ("X_train shape: " + str(X_train.shape))
-print ("Y_train shape: " + str(Y_train.shape))
-print ("X_test shape: " + str(X_test.shape))
-print ("Y_test shape: " + str(Y_test.shape))
+    X_train, Y_train, X_test, Y_test, X_val, Y_val, _ = load_dataset()
+    # X_train, Y_train = np.random.random(size=(1000, 256, 256, 3)).astype(np.float32), np.random.randint(2, size=(1000, 1)).astype(np.float32)
+    # X_test, Y_test = np.random.random(size=(200, 256, 256, 3)).astype(np.float32), np.random.randint(2, size=(200, 1)).astype(np.float32)
+    # X_val, Y_val = np.random.random(size=(100, 256, 256, 3)).astype(np.float32), np.random.randint(2, size=(100, 1)).astype(np.float32)
 
-num_examples = X_train.shape[0]
-input_shape = (None, ) + tuple(X_train.shape[1: ])
+    print ("number of training examples = " + str(X_train.shape[0]))
+    print ("number of test examples = " + str(X_test.shape[0]))
+    print ("X_train shape: " + str(X_train.shape))
+    print ("Y_train shape: " + str(Y_train.shape))
+    print ("X_test shape: " + str(X_test.shape))
+    print ("Y_test shape: " + str(Y_test.shape))
 
-tf.reset_default_graph()
+    num_examples = X_train.shape[0]
+    input_shape = (None, ) + tuple(X_train.shape[1: ])
 
-datatype = tf.float32
-initializer = tf.random_uniform_initializer()
+    tf.reset_default_graph()
 
-image_data = tf.placeholder(dtype=datatype, shape=input_shape)
-targets = tf.placeholder(dtype=tf.uint8, shape=(None, 1))
-keep_prob = tf.placeholder(dtype=datatype)
+    image_data = tf.placeholder(dtype=tf.float32, shape=input_shape, name='image_data')
+    targets = tf.placeholder(dtype=tf.float32, shape=(None, 1), name='targets')
+    keep_prob = tf.placeholder(dtype=tf.float32, name='keep_prob')
 
-zero_padding_1 = tf.pad(image_data, [[0, 0], [3, 3], [3, 3], [0, 0]])
+    with tf.variable_scope('zero_pad') as scope:
+        zero_pad = tf.pad(image_data, [[0, 0], [3, 3], [3, 3], [0, 0]], name=scope.name)
 
-kernel = tf.get_variable('kernel', shape=[7, 7, 3, 32], initializer=initializer, dtype=datatype)
-conv_1 = tf.nn.conv2d(zero_padding_1, filter=kernel, strides=[1, 1, 1, 1], padding='SAME')
-bn_1 = tf.layers.batch_normalization(conv_1)
-relu_1 = tf.nn.relu(conv_1)
-dropout_1 = tf.nn.dropout(relu_1, keep_prob=keep_prob)
-max_pool_1 = tf.nn.max_pool(relu_1, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
+    with tf.variable_scope('conv1') as scope:
+        kernel = tf.get_variable('kernel', shape=[7, 7, 3, 32], 
+                                initializer=tf.random_uniform_initializer(), 
+                                dtype=tf.float32)
+        conv = tf.nn.conv2d(zero_pad, filter=kernel, 
+                            strides=[1, 1, 1, 1], 
+                            padding='SAME')
+        bn = tf.layers.batch_normalization(conv)
+        relu = tf.nn.relu(bn)
+        dropout = tf.nn.dropout(relu, keep_prob=keep_prob)
+        conv1 = tf.nn.max_pool(dropout, ksize=[1, 2, 2, 1], 
+                                strides=[1, 2, 2, 1], padding='SAME', 
+                                name=scope.name)
 
-dim = np.prod(max_pool_1.get_shape().as_list()[1: ])
-flatten_1 = tf.reshape(max_pool_1, shape=[-1, dim])
-# flatten_1 = tf.layers.flatten(max_pool_1)
+    with tf.variable_scope('logits') as scope:
+        dim = np.prod(conv1.get_shape().as_list()[1: ])
+        flatten = tf.reshape(conv1, shape=[-1, dim])
+        weights = tf.get_variable('weights', shape=[dim, 1], 
+                    initializer=tf.random_uniform_initializer(), 
+                    dtype=tf.float32)
+        bias = tf.get_variable('bias', shape=[1], 
+                initializer=tf.constant_initializer(0.0), 
+                dtype=tf.float32)
+        dense = tf.add(tf.matmul(flatten, weights), bias)
+        logits = tf.nn.sigmoid(dense, name=scope.name)
 
-weights = tf.get_variable('weights', shape=[dim, 1], initializer=initializer, dtype=datatype)
-bias = tf.get_variable('bias', shape=[1], initializer=initializer, dtype=datatype)
-dense_1 = tf.add(tf.matmul(flatten_1, weights), bias)
-# output = tf.layers.dense(flatten_1, 1, activation='sigmoid')
+    loss = tf.losses.sigmoid_cross_entropy(targets, logits=logits)
+    accuracy = tf.reduce_mean(tf.cast(tf.equal(logits, targets), dtype=tf.float32))
 
-output = tf.nn.sigmoid(dense_1)
+    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+    train_step = optimizer.minimize(loss)
 
-loss = tf.losses.sigmoid_cross_entropy(targets, logits=output)
-optimizer = tf.train.AdamOptimizer()
-train_step = optimizer.minimize(loss)
+    if tensorboard_vis:
+        tf.summary.scalar('loss', loss)
+        tf.summary.scalar('accuracy', accuracy)
+        summaries = tf.summary.merge_all()
 
-sess = tf.Session()
-sess.run(tf.global_variables_initializer())
+    sess = tf.Session()
+    sess.run(tf.global_variables_initializer())
 
-epochs = 10
-batch_size = 32
+    n_steps = num_examples // batch_size
+    if not num_examples % batch_size == 0:
+        n_steps += 1
 
-n_steps = num_examples // batch_size
-if not num_examples % batch_size == 0:
-    n_steps += 1
+    if tensorboard_vis:
+        train_writer = tf.summary.FileWriter('logs/train', sess.graph)
+        val_writer = tf.summary.FileWriter('logs/val', sess.graph)
 
-for epoch in range(epochs):
-    # Training
-    total_train_loss, n_iter = 0.0, 0
-    for image_batch, label_batch in tqdm(iterate_minibatches(X_train, Y_train,
-        batchsize=batch_size, shuffle=True), total=n_steps, 
-        desc='Epoch {}/{}'.format(epoch, epochs)):
-        _, train_loss_iter = sess.run([train_step, loss],
-                                feed_dict={image_data: image_batch,
-                                            targets: label_batch,
-                                            keep_prob: 0.5})
-        total_train_loss += train_loss_iter
-        n_iter += 1
+    for epoch in range(num_epochs):
+        # Training
+        train_losses, train_accuracies, n_iter = [], [], 0
+        for image_batch, label_batch in tqdm(iterate_minibatches(X_train, Y_train,
+            batchsize=batch_size, shuffle=True), total=n_steps, 
+            desc='Epoch {}/{}'.format(epoch, num_epochs)):
+            if tensorboard_vis:
+                _, train_loss, train_acc, summary = sess.run([train_step, loss, accuracy, summaries],
+                                                feed_dict={image_data: image_batch,
+                                                            targets: label_batch,
+                                                            keep_prob: 0.5})
+            else:
+                _, train_loss, train_acc = sess.run([train_step, loss, accuracy],
+                                                feed_dict={image_data: image_batch,
+                                                            targets: label_batch,
+                                                            keep_prob: 0.5})
+            if tensorboard_vis and n_iter == 0:
+                train_writer.add_summary(summary, n_iter)
+                train_writer.flush()
 
-    avg_train_loss = total_train_loss / n_iter
+            train_losses.append(train_loss)
+            train_accuracies.append(train_acc)
+            n_iter += 1
 
-    # Validation
-    total_val_loss, n_iter = 0.0, 0
-    for image_batch, label_batch in iterate_minibatches(X_val, Y_val,
+        avg_train_loss = np.mean(train_losses)
+        avg_train_acc = np.mean(train_accuracies)
+
+        # Validation
+        val_losses, val_accuracies, n_iter = [], [], 0
+        for image_batch, label_batch in iterate_minibatches(X_val, Y_val,
+            batchsize=batch_size, shuffle=True):
+            if tensorboard_vis:
+                val_loss, val_acc, summary = sess.run([loss, accuracy, summaries], 
+                                            feed_dict={image_data: image_batch,
+                                                        targets: label_batch,
+                                                        keep_prob: 1.0})
+            else:
+                val_loss, val_acc = sess.run([loss, accuracy], 
+                                            feed_dict={image_data: image_batch,
+                                                        targets: label_batch,
+                                                        keep_prob: 1.0})
+            if tensorboard_vis and n_iter == 0:
+                val_writer.add_summary(summaries, n_iter)
+                val_writer.flush()
+            val_losses.append(val_loss)
+            val_accuracies.append(val_acc)
+            n_iter += 1
+
+        avg_val_loss = np.mean(val_losses)
+        avg_val_acc = np.mean(val_accuracies)
+        print('Epoch {}/{}: train loss: {:.4f} train acc: {:.4f} val loss: {:.4f} val acc: {:.4f}'
+            .format(epoch, num_epochs, avg_train_loss, avg_train_acc, avg_val_loss, avg_val_acc))
+
+    # Testing
+    test_losses, test_accuracies, n_iter = [], [], 0
+    for image_batch, label_batch in iterate_minibatches(X_test, Y_test,
         batchsize=batch_size, shuffle=True):
-        val_loss_iter = sess.run([loss], feed_dict={image_data: image_batch,
-                                                targets: label_batch,
-                                                keep_prob: 1.0})
-        total_val_loss += val_loss_iter[0]
+        test_loss, test_acc = sess.run([loss, accuracy],feed_dict={image_data: image_batch,
+                                                    targets: label_batch,
+                                                    keep_prob: 1.0})
+        test_losses.append(test_loss)
+        test_accuracies.append(test_acc)
         n_iter += 1
 
-    avg_val_loss = total_val_loss / n_iter
-    print('Epoch[{}/{}]   Training Loss: {:.4f}   Validation Loss: {:.4f}'
-        .format(epoch, epochs, avg_train_loss, avg_val_loss))
+    avg_test_loss = np.mean(test_losses)
+    avg_test_acc = np.mean(test_accuracies)
+    print('Test Loss: {:.4f} Test Accuracy: {:.4f}'.format(avg_test_loss, avg_test_acc))
 
-# Testing
-total_test_loss, n_iter = 0.0, 0
-for image_batch, label_batch in iterate_minibatches(X_test, Y_test,
-    batchsize=batch_size, shuffle=True):
-    test_loss_iter = sess.run([loss],feed_dict={image_data: image_batch,
-                                                targets: label_batch,
-                                                keep_prob: 1.0})
-    total_test_loss += test_loss_iter[0]
-    n_iter += 1
+    sess.close()
 
-avg_test_loss = total_test_loss / n_iter
-print('Test Loss: {:.4f}'.format(avg_test_loss))
+def main():
+    try:
+        train()
+    except KeyboardInterrupt:
+        print('EXIT')
+
+if __name__ == '__main__':
+    main()
