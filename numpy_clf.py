@@ -8,37 +8,30 @@ from keras.preprocessing import image
 from keras.applications.imagenet_utils import preprocess_input
 
 # Loading the data (cat/non-cat)
-X_train, X_val, X_test, y_train, y_val, y_test = load_dataset()
+X_train, _, X_test, y_train, _, y_test = load_dataset()
 
-# Example of a picture
-index = 25
-plt.imshow(train_set_x_orig[index])
-print ("y = " + str(train_set_y[:, index]) + ", it's a '" + classes[np.squeeze(train_set_y[:, index])].decode("utf-8") +  "' picture.")
-print(train_set_x_orig.shape)
-print(test_set_x_orig.shape)
-
-m_train = train_set_x_orig.shape[0]
-m_test = test_set_x_orig.shape[0]
-num_px = train_set_x_orig.shape[1]
+m_train = X_train.shape[0]
+m_test = X_test.shape[0]
+num_px = X_train.shape[1]
 
 print ("Number of training examples: m_train = " + str(m_train))
 print ("Number of testing examples: m_test = " + str(m_test))
 print ("Height/Width of each image: num_px = " + str(num_px))
 print ("Each image is of size: (" + str(num_px) + ", " + str(num_px) + ", 3)")
-print ("train_set_x shape: " + str(train_set_x_orig.shape))
-print ("train_set_y shape: " + str(train_set_y.shape))
-print ("test_set_x shape: " + str(test_set_x_orig.shape))
-print ("test_set_y shape: " + str(test_set_y.shape))
+print ("X_train shape: " + str(X_train.shape))
+print ("y_train shape: " + str(y_train.shape))
+print ("X_test shape: " + str(X_test.shape))
+print ("y_test shape: " + str(y_test.shape))
 
 # Reshape the training and test examples
 
-train_set_x_flatten = train_set_x_orig.reshape((num_px * num_px * 3, train_set_x_orig.shape[0]))
-test_set_x_flatten = test_set_x_orig.reshape((num_px * num_px * 3, test_set_x_orig.shape[0]))
+train_set_x_flatten = X_train.reshape((num_px * num_px * 3, X_train.shape[0]))
+test_set_x_flatten = X_test.reshape((num_px * num_px * 3, X_test.shape[0]))
 
 print ("train_set_x_flatten shape: " + str(train_set_x_flatten.shape))
-print ("train_set_y shape: " + str(train_set_y.shape))
+print ("train_set_y shape: " + str(y_train.shape))
 print ("test_set_x_flatten shape: " + str(test_set_x_flatten.shape))
-print ("test_set_y shape: " + str(test_set_y.shape))
+print ("test_set_y shape: " + str(y_test.shape))
 print ("sanity check after reshaping: " + str(train_set_x_flatten[0:5,0]))
 
 train_set_x = train_set_x_flatten/255
@@ -188,7 +181,7 @@ def model(X_train, Y_train, X_test, Y_test, num_iterations = 2000, learning_rate
     
     return d
 
-d = model(train_set_x, train_set_y, test_set_x, test_set_y, num_iterations = 2000, learning_rate = 0.005, print_cost = True)
+d = model(train_set_x, y_train, test_set_x, y_test, num_iterations = 2000, learning_rate = 0.005, print_cost = True)
 
 # Plot learning curve (with costs)
 costs = np.squeeze(d['costs'])
