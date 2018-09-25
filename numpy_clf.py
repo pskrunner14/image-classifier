@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import h5py
 import scipy
 from scipy import ndimage
-from lr_utils import load_dataset
+from utils import load_dataset
 from keras.preprocessing import image
 from keras.applications.imagenet_utils import preprocess_input
 

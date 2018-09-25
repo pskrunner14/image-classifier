@@ -1,4 +1,5 @@
 import os
+import time
 
 import click
 import numpy as np
@@ -6,7 +7,7 @@ import tensorflow as tf
 
 from tqdm import tqdm
 
-from lr_utils import load_dataset, iterate_minibatches
+from utils import load_dataset, iterate_minibatches
 
 """
 Training model [optional args]
@@ -32,6 +33,7 @@ def train(num_epochs, batch_size, learning_rate, tensorboard_vis):
 
     num_examples = X_train.shape[0]
     input_shape = (None, ) + tuple(X_train.shape[1: ])
+    timestamp = time.strftime('%Y_%m_%d_%H_%M_%S', time.localtime())
 
     tf.reset_default_graph()
 
@@ -81,6 +83,8 @@ def train(num_epochs, batch_size, learning_rate, tensorboard_vis):
 
     sess = tf.Session()
     sess.run(tf.global_variables_initializer())
+
+    saver = tf.train.Saver(tf.trainable_variables())
 
     n_steps = num_examples // batch_size
     if not num_examples % batch_size == 0:
@@ -142,6 +146,9 @@ def train(num_epochs, batch_size, learning_rate, tensorboard_vis):
         avg_val_acc = np.mean(val_accuracies)
         print('Epoch {}/{}: train loss: {:.4f} train acc: {:.4f} val loss: {:.4f} val acc: {:.4f}'
             .format(epoch, num_epochs, avg_train_loss, avg_train_acc, avg_val_loss, avg_val_acc))
+        # save model checkpoint
+        saver.save(sess, 'models/{}/model.ckpt'
+            .format(timestamp), global_step=epoch)
 
     # Testing
     test_losses, test_accuracies, n_iter = [], [], 0

@@ -1,4 +1,5 @@
 import os
+import click
 import logging
 
 import h5py
@@ -22,8 +23,9 @@ def process_image_dataset(dataset_path):
         raise UserWarning('Dataset path should not be None!')
 
     X = []
-    num_images = len(os.listdir(dataset_path))
-    for image_path in os.listdir(dataset_path):
+    images = os.listdir(dataset_path)
+
+    for image_path in tqdm(os.listdir(dataset_path), total=len(images), desc='Processing Images'):
         image = keras.preprocessing.image.load_img('{}/{}'
             .format(dataset_path, image_path), 
             target_size=(resolution, resolution))
@@ -31,7 +33,7 @@ def process_image_dataset(dataset_path):
 
     # convert to desired format
     X = np.array(X)
-    y = np.ones((num_images, 1))
+    y = np.ones((len(images), 1))
     
     logging.info('Features shape: {}'.format(X.shape))
     logging.info('Targets shape: {}'.format(y.shape))
@@ -59,10 +61,12 @@ def process_image_dataset(dataset_path):
     test_file.create_dataset('X_test', data=X_test)
     test_file.create_dataset('y_test', data=y_test)
 
-def main():
+@click.command()
+@click.option('-ds', '--dataset-path', default='datasets/images', help='Path for your Image Dataset')
+def main(dataset_path):
     LOG_FORMAT = '%(levelname)s %(message)s'
     logging.basicConfig(format=LOG_FORMAT, level='INFO')
-    process_image_dataset('datasets/images')
+    process_image_dataset(dataset_path)
     logging.info('Done preprocessing!')
 
 if __name__ == '__main__':

@@ -1,8 +1,8 @@
 # Image Classifier
 
-Image classification is the task of assigning an input image one label from a fixed set of categories. This is an **Image Classifier** that can be used to classify images based on whether they contain a certain object or not. Image Classification is one of the core problems in *Computer Vision* that, despite its simplicity, has a large variety of practical applications.
+Image classification is the task of assigning an input image one label from a fixed set of categories. This is an **Image Classifier** that can be used to classify images based on whether they contain a certain object or not. Image Classification is one of the core problems in **Computer Vision** that, despite its simplicity, has a large variety of practical applications.
 
-I have implemented *3* different versions of **Image Classifiers** using common Deep Learning Libraries (namely TensorFlow, Keras & Numpy) for the same task in order to gain a deeper understanding of the problem and the backend working of the frameworks and how their performance compares when analysed.
+I've implemented three different versions of **Image Classifiers** using common Deep Learning Libraries (namely *TensorFlow*, *Keras* & *Numpy*) for the same task in order to gain a deeper understanding of the problem and the backend working of the frameworks and their performance.
 
 ## Dataset
 
@@ -12,7 +12,7 @@ For the purpose of this project, I'll be using the [Cat Image Dataset](https://w
 
 You'll need to preprocess the images using:
 ```
-python prepro.py
+python prepro.py --dataset-path datasets/images
 ```
 
 Now you can run the train script using:
