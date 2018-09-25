@@ -18,7 +18,7 @@ Training model [optional args]
 @click.option('-tb', '--tensorboard-vis', is_flag=True, help='Flag for TensorBoard visualization',)
 def train(num_epochs, batch_size, learning_rate, tensorboard_vis):
 
-    X_train, Y_train, X_test, Y_test, X_val, Y_val, _ = load_dataset()
+    X_train, X_val, X_test, Y_train, Y_val, Y_test = load_dataset()
     # X_train, Y_train = np.random.random(size=(1000, 256, 256, 3)).astype(np.float32), np.random.randint(2, size=(1000, 1)).astype(np.float32)
     # X_test, Y_test = np.random.random(size=(200, 256, 256, 3)).astype(np.float32), np.random.randint(2, size=(200, 1)).astype(np.float32)
     # X_val, Y_val = np.random.random(size=(100, 256, 256, 3)).astype(np.float32), np.random.randint(2, size=(100, 1)).astype(np.float32)

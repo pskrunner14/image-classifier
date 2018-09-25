@@ -10,7 +10,7 @@ K.set_image_data_format('channels_last')
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import imshow
 
-X_train, Y_train, X_test, Y_test, X_val, Y_val, classes = load_dataset()
+X_train, X_val, X_test, Y_train, Y_val, Y_test = load_dataset()
 
 print ("number of training examples = " + str(X_train.shape[0]))
 print ("number of test examples = " + str(X_test.shape[0]))
@@ -67,4 +67,5 @@ def make_prediction(input_image, true_labal):
         print("This picture does'nt contain a cat")
 
     preds = model.predict(input_image)[0][0]
-    print('y = {}, algorithm predicts a \"{}\" picture.'.format(preds, classes[int(preds)].decode('utf-8')))
+    class_pred = 'cat' if int(preds) == 1 else 'non-cat'
+    print('y = {}, algorithm predicts a \"{}\" picture.'.format(preds, class_pred))

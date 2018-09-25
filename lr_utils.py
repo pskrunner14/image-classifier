@@ -7,22 +7,19 @@ import numpy as np
 import h5py
 
 def load_dataset():
-    train_dataset = h5py.File('datasets/training_data.h5', "r")
-    x_train = np.array(train_dataset["x_train"]) # your train set features
-    y_train = np.array(train_dataset["y_train"]) # your train set labels
-    labels = np.array(train_dataset["labels"])
+    train_dataset = h5py.File('datasets/training_data.h5', 'r')
+    X_train = np.array(train_dataset["X_train"][:]) # your train set features
+    y_train = np.array(train_dataset["y_train"][:]) # your train set labels
 
-    test_dataset = h5py.File('datasets/testing_data.h5', "r")
-    x_test = np.array(test_dataset["x_test"]) # your test set features
-    y_test = np.array(test_dataset["y_test"]) # your test set labels
+    train_dataset = h5py.File('datasets/validation_data.h5', 'r')
+    X_val = np.array(train_dataset["X_val"][:]) # your validation set features
+    y_val = np.array(train_dataset["y_val"][:]) # your validation set labels
 
-    x_val = x_train[-1000: ]
-    y_val = y_train[-1000: ]
+    train_dataset = h5py.File('datasets/testing_data.h5', 'r')
+    X_test = np.array(train_dataset["X_test"][:]) # your test set features
+    y_test = np.array(train_dataset["y_test"][:]) # your test set labels
 
-    x_train = x_train[: -1000]
-    y_train = y_train[: -1000]
-
-    return x_train, y_train, x_test, y_test, x_val, y_val, labels
+    return X_train, X_val, X_test, y_train, y_val, y_test
 
 def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
     assert len(inputs) == len(targets)

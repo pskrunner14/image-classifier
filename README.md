@@ -12,12 +12,17 @@ For the purpose of this project, I'll be using the [Cat Image Dataset](https://w
 
 You'll need to preprocess the images using:
 ```
-python preprocess.py
+python prepro.py
 ```
 
-Now you can run any train script version you want:
+Now you can run the train script using:
 ```
-python <lib>_clf.py
+python tf_clf.py --num-epochs 10 --batch-size 64 -lr 0.001 --tensorboard-vis
+```
+
+Passing the `--tensorboard-vis` flag enables you to visualize the training loss and accuracies in your browser using the following command:
+```
+tensorboard --log-dir=./logs
 ```
 
 ## Built With
